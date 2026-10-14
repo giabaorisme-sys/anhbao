@@ -356,31 +356,42 @@ elif st.session_state.page == "levels":
 
 # CHƠI SUDOKU
 elif st.session_state.page == "game":
-    character = CHARACTERS[(st.session_state.stage - 1) % len(CHARACTERS)]
-
+    
+# SUDOKU BRAINROT: HÌNH NHÂN VẬT THAY CHO SỐ
+elif st.session_state.page == "game":
     topbar(
-        f"SUDOKU · MÀN {st.session_state.stage}/5",
-        f"{st.session_state.level} • {character['name']}"
+        "🧠 SUDOKU BRAINROT",
+        f"Màn {st.session_state.stage}/5 • {st.session_state.level}"
     )
 
     puzzle = st.session_state.puzzle
     board = st.session_state.board
 
-    left, right = st.columns([1.7, 1])
+    def get_character_file(value):
+        if value == 0:
+            return None
+        return ASSETS / CHARACTERS[value - 1]["file"]
+
+    def get_character_label(value):
+        if value == 0:
+            return "⬜ Chọn nhân vật"
+        return CHARACTERS[value - 1]["name"]
+
+    st.markdown("""
+    <div class="panel">
+        <h3 style="text-align:center">🧩 BẢNG BRAINROT 9×9</h3>
+        <p style="text-align:center;color:#b9d7ff">
+            Mỗi nhân vật đại diện cho một giá trị.
+            Không được trùng nhân vật trong cùng hàng, cột hoặc vùng 3×3.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    left, right = st.columns([3, 1])
 
     with left:
-        st.markdown("""
-        <div class="panel">
-            <h3 style="text-align:center">BẢNG SUDOKU 9×9</h3>
-            <p style="text-align:center;color:#a9c9f3">
-                Điền số từ 1 đến 9. Mỗi hàng, cột và ô 3×3
-                không được lặp số.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        with st.form("sudoku_form"):
-            updated = []
+        with st.form("brainrot_board_form"):
+            updated_board = []
 
             for r in range(9):
                 cols = st.columns(9, gap="small")
@@ -388,67 +399,77 @@ elif st.session_state.page == "game":
 
                 for c in range(9):
                     with cols[c]:
-                        if puzzle[r][c] != 0:
-                            color = (
-                                "#164b85"
-                                if (r // 3 + c // 3) % 2 == 0
-                                else "#0d376b"
-                            )
+                        value = puzzle[r][c]
 
-                            st.markdown(
-                                f"""
-                                <div style="
-                                    height:42px;
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:center;
-                                    background:{color};
-                                    border:1px solid #4a8bd2;
-                                    border-radius:5px;
-                                    font-size:1.1rem;
-                                    font-weight:900">
-                                    {puzzle[r][c]}
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
-                            row.append(puzzle[r][c])
+                        st.markdown(
+                            "<div style='background:#0c2852;"
+                            "border:1px solid #287ac0;"
+                            "border-radius:5px;padding:2px;"
+                            "text-align:center'>",
+                            unsafe_allow_html=True
+                        )
 
-                        else:
-                            value = st.selectbox(
-                                f"Ô {r + 1}-{c + 1}",
-                                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                                index=board[r][c],
-                                format_func=lambda x: "·" if x == 0 else str(x),
-                                label_visibility="collapsed",
-                                key=f"cell_{st.session_state.stage}_{r}_{c}"
-                            )
+                        if value != 0:
+                            # Ô có sẵn: chỉ hiện ảnh nhân vật, không hiện số
+                            path = get_character_file(value)
+
+                            if path and path.exists():
+                                st.image(str(path), width=42)
+                            else:
+                                st.markdown("❓")
+
                             row.append(value)
 
-                updated.append(row)
+                        else:
+                            # Ô trống: chọn nhân vật thay cho số
+                            selected = st.selectbox(
+                                f"Ô {r+1}-{c+1}",
+                                options=list(range(10)),
+                                index=board[r][c],
+                                format_func=get_character_label,
+                                label_visibility="collapsed",
+                                key=f"brainrot_cell_{st.session_state.stage}_{r}_{c}"
+                            )
 
-            submitted = st.form_submit_button(
-                "✓ LƯU BẢNG",
+                            if selected != 0:
+                                path = get_character_file(selected)
+
+                                if path and path.exists():
+                                    st.image(str(path), width=42)
+                                else:
+                                    st.caption("Thiếu ảnh")
+
+                            row.append(selected)
+
+                        st.markdown("</div>", unsafe_allow_html=True)
+
+                updated_board.append(row)
+
+            save = st.form_submit_button(
+                "💾 LƯU BÀN CHƠI",
                 use_container_width=True
             )
 
-        if submitted:
-            st.session_state.board = updated
-            st.success("Đã lưu bảng Sudoku!")
+        if save:
+            st.session_state.board = updated_board
+            st.success("Đã lưu lựa chọn nhân vật!")
             st.rerun()
 
     with right:
-        st.markdown('<div class="panel"><h3>🧩 Công cụ</h3></div>',
-                    unsafe_allow_html=True)
+        st.markdown("### 🌟 Nhân vật")
 
-        st.metric("Độ khó", st.session_state.level)
-        st.metric("Màn chơi", f"{st.session_state.stage}/5")
-        st.metric("Ghi chú", f"{st.session_state.notes} lần")
+        for i, character in enumerate(CHARACTERS):
+            path = ASSETS / character["file"]
 
-        if st.button("💡 Gợi ý một ô", use_container_width=True):
+            if path.exists():
+                st.image(str(path), width=90)
+
+            st.caption(character["name"])
+
+        if st.button("💡 Gợi ý", use_container_width=True):
             current = [row[:] for row in st.session_state.board]
 
-            candidates = [
+            empty_cells = [
                 (r, c)
                 for r in range(9)
                 for c in range(9)
@@ -456,54 +477,40 @@ elif st.session_state.page == "game":
                 and current[r][c] != SOLUTION[r][c]
             ]
 
-            if candidates:
-                r, c = random.choice(candidates)
-                current[r][c] = SOLUTION[r][c]
+            if empty_cells:
+                r, c = random.choice(empty_cells)
+                value = SOLUTION[r][c]
+                current[r][c] = value
                 st.session_state.board = current
+
+                key = f"brainrot_cell_{st.session_state.stage}_{r}_{c}"
+                st.session_state[key] = value
                 st.session_state.notes += 1
+                st.rerun()
 
-                # Cập nhật giá trị widget cho ô được gợi ý
-                st.session_state[
-                    f"cell_{st.session_state.stage}_{r}_{c}"
-                ] = SOLUTION[r][c]
-
+        if st.button("✓ KIỂM TRA", use_container_width=True):
+            if st.session_state.board == SOLUTION:
+                st.session_state.page = "success"
                 st.rerun()
             else:
-                st.info("Không còn ô cần gợi ý.")
+                st.warning(
+                    "Chưa đúng hết! Hãy điền các nhân vật còn thiếu "
+                    "hoặc sửa nhân vật chưa đúng."
+                )
 
-        if st.button("↻ Làm lại màn này", use_container_width=True):
-            st.session_state.board = [row[:] for row in puzzle]
-            st.session_state.mistakes = 0
+        if st.button("↻ Chơi lại", use_container_width=True):
+            st.session_state.board = [
+                row[:] for row in puzzle
+            ]
 
             for r in range(9):
                 for c in range(9):
                     if puzzle[r][c] == 0:
-                        key = f"cell_{st.session_state.stage}_{r}_{c}"
+                        key = f"brainrot_cell_{st.session_state.stage}_{r}_{c}"
                         if key in st.session_state:
                             del st.session_state[key]
 
             st.rerun()
-
-        if st.button("✓ KIỂM TRA ĐÁP ÁN", use_container_width=True):
-            current = st.session_state.board
-
-            if current == SOLUTION:
-                go("success")
-            else:
-                wrong = sum(
-                    1
-                    for r in range(9)
-                    for c in range(9)
-                    if current[r][c] != SOLUTION[r][c]
-                )
-                st.session_state.mistakes += 1
-                st.warning(
-                    f"Còn {wrong} ô chưa đúng hoặc chưa điền. Cố lên!"
-                )
-
-        st.write("")
-        show_image(character["file"])
-        st.caption(f"Nhân vật đồng hành: {character['name']}")
 
 
 # MÀN HÌNH CHIẾN THẮNG
