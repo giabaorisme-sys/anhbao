@@ -650,4 +650,3 @@ elif st.session_state.page == "success":
 
     if st.button("🏠 Về trang chủ", use_container_width=True):
         go("home")
-```
