@@ -355,8 +355,6 @@ elif st.session_state.page == "levels":
 
 
 # CHƠI SUDOKU
-elif st.session_state.page == "game":
-    
 # SUDOKU BRAINROT: HÌNH NHÂN VẬT THAY CHO SỐ
 elif st.session_state.page == "game":
     topbar(
