@@ -1,4 +1,4 @@
-```python
+
 import streamlit as st
 import random
 import time
@@ -37,8 +37,6 @@ SOLUTION = [
     [2, 8, 7, 4, 1, 9, 6, 3, 5],
     [3, 4, 5, 2, 8, 6, 1, 7, 9],
 ]
-
-
 def make_puzzle(level):
     holes = {
         "Dễ": 34,
@@ -60,7 +58,6 @@ def go(page):
     st.session_state.page = page
     st.rerun()
 
-
 defaults = {
     "page": "home",
     "level": "Dễ",
@@ -73,7 +70,6 @@ defaults = {
 for key, value in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = value
-
 
 # CALLBACKS: chạy trước khi Streamlit tạo lại các widget
 def give_hint():
@@ -112,7 +108,6 @@ def give_hint():
     st.session_state.hint_message = (
         "💡 Đã điền một nhân vật đúng!"
     )
-
 
 def reset_current_game():
     if "puzzle" not in st.session_state:
