@@ -321,7 +321,6 @@ if st.session_state.page == "home":
     """, unsafe_allow_html=True)
 
     st.write("")
-    render_characters()
 
 
 # CHỌN ĐỘ KHÓ
